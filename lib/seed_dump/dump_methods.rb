@@ -58,7 +58,7 @@ class SeedDump
     end
 
     def write_records_to_io(records, io, options)
-      io.write("#{model_for(records)}.create!([\n  ")
+      model = model_for(records)
 
       enumeration_method = if records.is_a?(ActiveRecord::Relation) || records.is_a?(Class)
                              :active_record_enumeration
@@ -67,12 +67,12 @@ class SeedDump
                            end
 
       send(enumeration_method, records, io, options) do |record_strings, last_batch|
-        io.write(record_strings.join(",\n  "))
 
-        io.write(",\n  ") unless last_batch
+        record_strings.each do |rs|
+          io.write("#{model}.new(#{rs}).save(validate: false)\n")
+        end
+
       end
-
-      io.write("\n])\n")
 
       if options[:file].present?
         nil
